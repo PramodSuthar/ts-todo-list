@@ -1,24 +1,86 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import "./styles.css"
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+type Todo = {
+  id: string
+  name: string
+  complete: boolean
+}
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+const form = document.querySelector<HTMLFormElement>("#new-todo-form")!
+const todoInput = document.querySelector<HTMLInputElement>("#todo-input")!
+const list = document.querySelector<HTMLUListElement>("#list")!
+
+let todos = loadTodos()
+todos.forEach(renderNewTodo)
+
+
+form.addEventListener("submit", e => {
+  e.preventDefault()
+ 
+  const todoName = todoInput.value
+  if (todoName === "") return
+  const newTodo = {
+    id: crypto.randomUUID(),
+    name: todoName,
+    complete: false
+  }
+
+  console.log('todo', newTodo)
+
+  todos.push(newTodo)
+  renderNewTodo(newTodo)
+  saveTodos()
+  todoInput.value = ""
+})
+
+function renderNewTodo(todo: Todo) {
+  const listItem = document.createElement("li")
+  listItem.classList.add("list-item")
+
+  const label = document.createElement("label")
+  label.classList.add("list-item-label")
+
+  const checkbox = document.createElement("input")
+  checkbox.type = "checkbox"
+  checkbox.checked = todo.complete
+  checkbox.classList.add("label-input")
+  checkbox.addEventListener("change", () => {
+    todo.complete = checkbox.checked
+  })
+
+  const textElement = document.createElement("span")
+  textElement.classList.add("label-text")
+  textElement.innerText = todo.name
+
+
+  const deleteButton = document.createElement("button")
+  deleteButton.classList.add("delete-btn")
+  deleteButton.innerText = "Delete"
+  deleteButton.addEventListener("click", ()=> {
+    listItem.remove()
+    todos = todos.filter(t => t.id !== todo.id)
+    saveTodos()
+  })
+
+  label.append(checkbox, textElement)
+  listItem.append(label, deleteButton)
+  list.append(listItem)
+}
+
+function saveTodos() {
+  localStorage.setItem("todos", JSON.stringify(todos))
+}
+
+function loadTodos() {
+  const value = localStorage.getItem("todos")
+  if (value == null) return []
+  return JSON.parse(value) as Todo[]
+}
+
+//  <li class="list-item">
+//         <label class="list-item-label">
+//           <input class="label-input" type="checkbox" />
+//           <span class="label-text">Placeholder Task</span>
+//         </label>
+//         <button class="delete-btn">Delete</button>
+//       </li>
